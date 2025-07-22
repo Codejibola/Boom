@@ -14,7 +14,9 @@ export default function VideoRecorder() {
     chunksRef.current = chunks;
   }, [chunks]);
 
-  const setupCamera = async () => {
+  
+  useEffect(() => {
+    async function setupCamera() {
     setCameraReady(false);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -56,8 +58,6 @@ export default function VideoRecorder() {
       alert("Failed to access the camera.");
     }
   };
-
-  useEffect(() => {
     setupCamera();
   }, [facingMode]);
 
