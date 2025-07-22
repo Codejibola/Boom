@@ -8,48 +8,65 @@ export default function VideoRecorder() {
   const [isRecording, setIsRecording] = useState(false);
   const [videoURL, setVideoURL] = useState(null);
   const [facingMode, setFacingMode] = useState("environment");
+  const [cameraReady, setCameraReady] = useState(false);
 
   useEffect(() => {
     chunksRef.current = chunks;
   }, [chunks]);
 
-  useEffect(() => {
-    const setupCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {facingMode: { exact: facingMode }, width: { ideal: 640 }, height: { ideal: 480 } },
-          audio: true,
-        });
+  const setupCamera = async () => {
+    setCameraReady(false);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: { exact: facingMode },
+        },
+        audio: true,
+      });
+
+      if (videoRef.current) {
         videoRef.current.srcObject = stream;
-
-        const recorder = new MediaRecorder(stream);
-        recorderRef.current = recorder;
-
-        recorder.ondataavailable = (e) => {
-          if (e.data.size > 0) setChunks((prev) => [...prev, e.data]);
-        };
-
-        recorder.onstop = () => {
-          if (chunksRef.current.length === 0) {
-            alert('No video data was recorded.');
-            return;
-          }
-          const blob = new Blob(chunksRef.current, {
-            type: 'video/webm;codecs=vp8,opus',
-          });
-          const url = URL.createObjectURL(blob);
-          setVideoURL(url);
-          console.log('Recorded blob:', blob);
-        };
-      } catch (err) {
-        console.error('Camera access error:', err);
       }
-    };
 
+      const recorder = new MediaRecorder(stream);
+      recorderRef.current = recorder;
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) setChunks((prev) => [...prev, e.data]);
+      };
+
+      recorder.onstop = () => {
+        if (chunksRef.current.length === 0) {
+          alert("No video data was recorded.");
+          return;
+        }
+        const blob = new Blob(chunksRef.current, {
+          type: "video/webm;codecs=vp8,opus",
+        });
+        const url = URL.createObjectURL(blob);
+        setVideoURL(url);
+        console.log("Recorded blob:", blob);
+      };
+
+      setCameraReady(true);
+    } catch (err) {
+      console.error("Camera access error:", err);
+      alert("Failed to access the camera.");
+    }
+  };
+
+  useEffect(() => {
     setupCamera();
   }, [facingMode]);
 
   const startRecording = () => {
+    if (!recorderRef.current) {
+      alert("Camera is still initializing. Please wait a moment.");
+      return;
+    }
+
     setChunks([]);
     setVideoURL(null);
     recorderRef.current.start(100);
@@ -80,11 +97,16 @@ export default function VideoRecorder() {
           className="mt-6 w-full max-w-md rounded-xl border border-gray-300 shadow-md"
         />
 
-        <div className="mt-6">
+        <div className="mt-6 flex justify-center items-center gap-4 flex-wrap">
           {!isRecording ? (
             <button
               onClick={startRecording}
-              className="w-16 h-16 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-md transition"
+              disabled={!cameraReady}
+              className={`w-16 h-16 rounded-full ${
+                cameraReady
+                  ? "bg-blue-600 hover:bg-blue-700"
+                  : "bg-gray-400 cursor-not-allowed"
+              } text-white flex items-center justify-center shadow-md transition`}
             >
               <span className="text-sm font-semibold">Start</span>
             </button>
@@ -96,6 +118,7 @@ export default function VideoRecorder() {
               <span className="text-sm font-semibold">Stop</span>
             </button>
           )}
+
           <button
             onClick={switchCamera}
             className="px-5 py-2 rounded-full bg-gray-200 hover:bg-gray-300 text-sm text-gray-700 transition"
