@@ -7,6 +7,7 @@ export default function VideoRecorder() {
   const [chunks, setChunks] = useState([]);
   const [isRecording, setIsRecording] = useState(false);
   const [videoURL, setVideoURL] = useState(null);
+  const [facingMode, setFacingMode] = useState("environment");
 
   useEffect(() => {
     chunksRef.current = chunks;
@@ -16,7 +17,7 @@ export default function VideoRecorder() {
     const setupCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 640 }, height: { ideal: 480 } },
+          video: {facingMode: { exact: facingMode }, width: { ideal: 640 }, height: { ideal: 480 } },
           audio: true,
         });
         videoRef.current.srcObject = stream;
@@ -46,7 +47,7 @@ export default function VideoRecorder() {
     };
 
     setupCamera();
-  }, []);
+  }, [facingMode]);
 
   const startRecording = () => {
     setChunks([]);
@@ -58,6 +59,10 @@ export default function VideoRecorder() {
   const stopRecording = () => {
     recorderRef.current.stop();
     setIsRecording(false);
+  };
+
+  const switchCamera = () => {
+    setFacingMode((prev) => (prev === "environment" ? "user" : "environment"));
   };
 
   return (
@@ -91,6 +96,12 @@ export default function VideoRecorder() {
               <span className="text-sm font-semibold">Stop</span>
             </button>
           )}
+          <button
+            onClick={switchCamera}
+            className="px-5 py-2 rounded-full bg-gray-200 hover:bg-gray-300 text-sm text-gray-700 transition"
+          >
+            Switch
+          </button>
         </div>
 
         {videoURL && (
