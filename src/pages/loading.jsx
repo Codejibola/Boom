@@ -1,37 +1,45 @@
 import React from "react";
+import { motion } from "framer-motion";
 
+export default function Loader() {
+  // Generate random stars
+  const stars = Array.from({ length: 25 }).map((_, i) => {
+    const randomX = Math.random() * 100;
+    const randomY = Math.random() * 100;
+    const delay = Math.random() * 5;
 
-export default function Loader(){
-     const containerStyle = {
-    backgroundColor: 'black',
-    height: '100vh',
-    width: '100vw',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center'
-  };
-
-  const bStyle = {
-    color: 'blue',
-    fontWeight: 'bold',
-    fontSize: '80px',
-    display: 'inline-block',
-    animation: 'spin 2s linear infinite'
-  };
+    return (
+      <motion.div
+        key={i}
+        className="absolute w-1 h-1 bg-white rounded-full opacity-70"
+        style={{
+          top: `${randomY}vh`,
+          left: `${randomX}vw`,
+        }}
+        animate={{
+          x: [0, -30, 0],
+          y: [0, 30, 0],
+          opacity: [0.5, 1, 0.5],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          repeatType: "loop",
+          delay,
+        }}
+      />
+    );
+  });
 
   return (
-    <>
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
-      <div style={containerStyle}>
-        <div style={bStyle}>B</div>
+    <div className="relative flex justify-center items-center h-screen w-screen bg-black overflow-hidden">
+      {/* Stars background */}
+      {stars}
+
+      {/* Clean "B" without glow */}
+      <div className="text-8xl font-bold text-blue-600 relative z-10">
+        B
       </div>
-    </>
-    )
+    </div>
+  );
 }
